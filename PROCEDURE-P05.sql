@@ -1,0 +1,160 @@
+
+-- Queston 01
+CREATE DATABASE NewENDP05;
+USE NewENDP05;
+
+CREATE TABLE Student(
+   RegNo varchar(50) PRIMARY KEY,
+   stuName varchar(100),
+   DoB Date,
+   Gender varchar(6)
+);
+
+INSERT INTO Student 
+(RegNo, stuName, DoB, Gender)
+VALUES
+('ICT001','K.M.P. Kumara','1996/12/25','Male'),
+('ICT002','G.L.Y. Lenagala','1996/08/10','Female'),
+('ICT003','B.A. Jayaranga','1996/05/23','Male'),
+('ICT004','B.L.D. Lakmal','1996/06/15','Male'),
+('ICT005','K.N.R. Nipuni','1996/2/18','Female');
+
+CREATE TABLE Marks(
+   RegNo varchar(50) not null,
+   ICT INT,
+   Maths INT,
+   Physics INT,
+   FOREIGN KEY(RegNo)REFERENCES Student(RegNo)
+);
+
+INSERT INTO Marks 
+(RegNo, ICT, Maths, Physics)
+VALUES
+('ICT001',80,70,90),
+('ICT002',45,35,55),
+('ICT003',25,35,15),
+('ICT004',65,80,50),
+('ICT005',15,25,5);
+
+DELIMITER //
+CREATE PROCEDURE getAllMarks()
+BEGIN
+   SELECT * FROM Marks ;
+END //
+DELIMITER ;
+
+CALL getAllMarks();
+
+DELIMITER //
+CREATE PROCEDURE getAvgMarks ()
+BEGIN
+    SELECT stuName ,
+    (m.ICT + m.Maths + m.Physics)/3  AS Average
+    FROM Student s 
+    JOIN Marks m ON s.RegNo = m.RegNo;
+END //
+DELIMITER ;
+CALL getAvgMarks ();
+
+SHOW PROCEDURE STATUS WHERE Db = 'NewENDP05';
+
+
+DELIMITER //
+CREATE PROCEDURE GET_MALE_STUDENT_COUNT()
+BEGIN
+    SELECT COUNT(*) AS MALE_STUDENTS FROM Student WHERE Gender = 'Male';
+END //
+DELIMITER ;
+CALL GET_MALE_STUDENT_COUNT();
+
+DROP PROCEDURE GET_MALE_STUDENT_COUNT;
+
+DELIMITER //
+CREATE PROCEDURE GET_STUDENT_DETAILS( )
+BEGIN
+   SELECT stuName,DoB,Gender FROM Student WHERE RegNo = 'ICT001';
+END //
+DELIMITER ;
+
+CALL GET_STUDENT_DETAILS();
+
+
+DELIMITER //
+CREATE PROCEDURE GET_AGE(IN P_regno VARCHAR(20))
+BEGIN
+   SELECT TIMESTAMPDIFF(Year,DoB,CURDATE()) AS age FROM Student 
+   WHERE RegNo = P_regno;
+END //
+DELIMITER ;
+CALL GET_AGE('ICT001');
+
+DELIMITER //
+CREATE PROCEDURE printGrade(IN p_regNo VARCHAR(50), OUT GRADE VARCHAR(20))
+BEGIN
+    DECLARE AVERAGE DECIMAL(10,2); 
+    SELECT 
+    (M.ICT+M.Maths+M.Physics)/3 INTO AVERAGE 
+    FROM Student S JOIN Marks M ON S.RegNo = M.RegNo  WHERE S.RegNo = p_regNo;
+    
+    CASE
+      WHEN AVERAGE >= 75 THEN SET GRADE  = 'A';
+      WHEN AVERAGE >= 60 THEN SET GRADE  = 'B';
+      WHEN AVERAGE >= 40 THEN SET GRADE  = 'C';
+      WHEN AVERAGE >= 20 THEN SET GRADE  = 'D';
+      ELSE SET GRADE = 'F';
+    END CASE;
+END //
+DELIMITER ;
+
+CALL printGrade('ICT001',@GRADE);
+SELECT @GRADE AS grade;
+
+
+-- Question 02
+CREATE DATABASE ENDemployeeDetails;
+USE ENDemployeeDetails;
+
+CREATE TABLE Emp (
+    Name VARCHAR(255),
+    DOB DATE,
+    Location VARCHAR(255)
+);
+
+INSERT INTO Emp (Name, DOB, Location)
+VALUES
+('Amit', '1970-01-08', 'Nuwara'),
+('Sumith', '1990-11-02', 'Galle'),
+('Sudha', '1980-11-06', 'Jaffna');
+
+DELIMITER //
+CREATE FUNCTION getDob(employName VARCHAR(20))
+RETURNS DATE
+DETERMINISTIC
+BEGIN
+    DECLARE BIRTHDATE DATE;
+    SELECT DoB INTO BIRTHDATE FROM Emp WHERE Name = employName;
+    RETURN BIRTHDATE;
+END //
+DELIMITER ;
+SELECT getDob('Amit') AS BIRTHDAY;
+
+
+DELIMITER //
+CREATE FUNCTION getLocation(e_name varchar(100))
+RETURNS VARCHAR(100)
+DETERMINISTIC 
+BEGIN 
+    DECLARE N_LOCATION VARCHAR(100);
+    SELECT Location INTO N_LOCATION FROM Emp WHERE Name = e_name;
+    RETURN N_LOCATION;
+END //
+DELIMITER ;
+DROP FUNCTION getLocation;
+SELECT getLocation('Amit') AS LOCATION;
+
+
+
+
+
+
+
